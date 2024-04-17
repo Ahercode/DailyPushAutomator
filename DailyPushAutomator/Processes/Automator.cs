@@ -13,10 +13,8 @@ public class Automator
     {
         _configuration = configuration;
     }
-    
     public async Task PushToRepoAsync()
     {
-        
         var githubToken = _configuration["GithubSettings:repoToken"];
         var repo = _configuration["GithubSettings:repo"];
         var owner = _configuration["GithubSettings:owner"];
@@ -30,19 +28,29 @@ public class Automator
             // Get the repository
             var repository = await github.Repository.Get(owner, repo);
 
-            // Get the file
-            var file = await github.Repository.Content.GetAllContentsByRef(owner, repo, "Ahercode.txt", "master");
-            var fileContent = file.First().Content;
+            // Try to get the file
+            RepositoryContent file;
+            try
+            {
+                file = (await github.Repository.Content.GetAllContentsByRef(owner, repo, "Ahercode.txt", "main")).First();
+            }
+            catch (NotFoundException)
+            {
+                // If the file does not exist, create it
+                await github.Repository.Content.CreateFile(owner, repo, "Ahercode.txt",
+                    new CreateFileRequest("Initial commit", "Initial content"));
+                file = (await github.Repository.Content.GetAllContentsByRef(owner, repo, "Ahercode.txt", "main")).First();
+            }
 
             // Update the file content with the current time
             var updatedContent = $"Last updated at: {DateTime.Now}";
-            if (fileContent != updatedContent)
+            if (file.Content != updatedContent)
             {
                 var updateChangeSet = await github.Repository.Content.UpdateFile(
                     owner,
                     repo,
                     "Ahercode.txt",
-                    new UpdateFileRequest("New update added!!", updatedContent, file.First().Sha, "master"));
+                    new UpdateFileRequest("New update added!!", updatedContent, file.Sha, "main"));
 
                 Console.WriteLine($"Updated file at: {DateTime.Now}");
             }
