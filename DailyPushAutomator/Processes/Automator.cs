@@ -17,9 +17,9 @@ public class Automator
     public async Task PushToRepoAsync()
     {
         
-        var githubToken = _configuration["EmailConfiguration:From"];
-        var repo = _configuration["EmailConfiguration:From"];
-        var owner = _configuration["EmailConfiguration:From"];
+        var githubToken = _configuration["GithubSettings:repoToken"];
+        var repo = _configuration["GithubSettings:repo"];
+        var owner = _configuration["GithubSettings:owner"];
         try
         {
             var github = new GitHubClient(new ProductHeaderValue("DailyPushAutomator"))
